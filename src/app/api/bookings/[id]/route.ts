@@ -1,0 +1,59 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getDB } from '@/lib/db'
+import type { Booking } from '@/lib/db'
+
+export const runtime = 'edge'
+
+// PATCH /api/bookings/[id] — update status
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const db = getDB()
+    const body = await req.json()
+    const { status } = body
+
+    const valid = ['confirmed', 'completed', 'cancelled', 'no-show']
+    if (!valid.includes(status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+    }
+
+    const result = await db
+      .prepare('UPDATE bookings SET status = ? WHERE id = ? RETURNING *')
+      .first<Booking>(status, params.id)
+
+    if (!result) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
+
+    return NextResponse.json(result)
+  } catch (err) {
+    console.error(err)
+    return NextResponse.json({ error: 'Failed to update booking' }, { status: 500 })
+  }
+}
+
+// GET /api/bookings/[id] — get single booking (for cancel page)
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const db = getDB()
+    const booking = await db
+      .prepare('SELECT * FROM bookings WHERE id = ?')
+      .first<Booking>(params.id)
+
+    if (!booking) {
+      return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
+    }
+
+    // Only return safe fields for public access
+    return NextResponse.json({
+      id: booking.id,
+      customer_name: booking.customer_name,
+      service_name: booking.service_name,
+      booking_date: booking.booking_date,
+      booking_time: booking.booking_time,
+      status: booking.status,
+    })
+  } catch (err) {
+    console.error(err)
+    return NextResponse.json({ error: 'Failed to get booking' }, { status: 500 })
+  }
+}

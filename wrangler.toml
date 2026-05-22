@@ -1,16 +1,24 @@
-name = "stackwell-shop"
-compatibility_date = "2024-03-29"
+# wrangler.toml — Black Creek Barber
+# Fill in database_id after running: wrangler d1 create stackwell-blackcreek
+
+name = "stackwell-blackcreek"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".vercel/output/static"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "stackwell-shop-db"
-database_id = "2019829b-a918-4456-ae29-dc685741684f"
-
-[[r2_buckets]]
-binding = "ASSETS"
-bucket_name = "stackwell-shop-assets"
+database_name = "stackwell-blackcreek"
+database_id = "1d295b84-1ae3-48bf-8e36-8751c0422010"
 
 [vars]
-NEXT_PUBLIC_APP_URL = "http://localhost:3000"
+SHOP_NAME = "Black Creek Barber"
+RESEND_FROM = "bookings@stackwell.digital"
+SLOT_INTERVAL = "30"
+BOOKING_WINDOW_DAYS = "14"
+MULTI_STAFF = "false"
+CANCEL_CUTOFF_HOURS = "24"
+SHOP_PHONE = ""          # ← add her phone number
+
+# Optional Google Calendar
+# GCAL_CALENDAR_ID = ""  # ← add if using GCal integration
