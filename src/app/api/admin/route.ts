@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
         const month = searchParams.get('month') || new Date().toISOString().slice(0, 7)
         const { results } = await db
           .prepare(`SELECT * FROM bookings WHERE booking_date LIKE ? AND status != 'cancelled'`)
-          .all<Booking>(`${month}%`)
+          .bind(`${month}%`).all<Booking>()
 
         return NextResponse.json({
           total: results.length,
@@ -107,19 +107,20 @@ export async function POST(req: NextRequest) {
       const result = await db
         .prepare(`INSERT INTO blocked_times (staff_id, date, day_of_week, start_time, end_time, reason, recurring)
           VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *`)
-        .first(staff_id || null, date || null, day_of_week || null, start_time, end_time, reason || null, recurring ? 1 : 0)
+        .bind(staff_id || null, date || null, day_of_week || null, start_time, end_time, reason || null, recurring ? 1 : 0)
+        .first()
       return NextResponse.json(result, { status: 201 })
     }
 
     if (action === 'walkin') {
       const { customer_name, customer_phone, customer_email, service_id, staff_id, booking_date, booking_time, notes } = body
       const service = await db.prepare('SELECT * FROM services WHERE id = ?')
-        .first<{ id: number; name: string; price: number; duration: number }>(service_id)
+        .bind(service_id).first<{ id: number; name: string; price: number; duration: number }>()
       if (!service) return NextResponse.json({ error: 'Service not found' }, { status: 404 })
 
       let staffName = null
       if (staff_id) {
-        const staff = await db.prepare('SELECT name FROM staff WHERE id = ?').first<{ name: string }>(staff_id)
+        const staff = await db.prepare('SELECT name FROM staff WHERE id = ?').bind(staff_id).first<{ name: string }>()
         staffName = staff?.name || null
       }
 
@@ -127,7 +128,8 @@ export async function POST(req: NextRequest) {
         .prepare(`INSERT INTO bookings
           (customer_name, customer_phone, customer_email, service_id, service_name, service_price, service_duration, staff_id, staff_name, booking_date, booking_time, status, notes)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?) RETURNING *`)
-        .first(customer_name, customer_phone || '', customer_email || '', service.id, service.name, service.price, service.duration, staff_id || null, staffName, booking_date, booking_time, notes || null)
+        .bind(customer_name, customer_phone || '', customer_email || '', service.id, service.name, service.price, service.duration, staff_id || null, staffName, booking_date, booking_time, notes || null)
+        .first()
       return NextResponse.json(result, { status: 201 })
     }
 
@@ -147,7 +149,7 @@ export async function DELETE(req: NextRequest) {
 
   try {
     if (action === 'block') {
-      await db.prepare('DELETE FROM blocked_times WHERE id = ?').run(id)
+      await db.prepare('DELETE FROM blocked_times WHERE id = ?').bind(id).run()
       return NextResponse.json({ ok: true })
     }
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
