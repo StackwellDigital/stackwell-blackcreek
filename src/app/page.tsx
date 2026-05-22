@@ -57,9 +57,9 @@ export default function BookingPage() {
 
   // Load services on mount
   useEffect(() => {
-fetch('/api/services')
-  .then(r => r.json())
-  .then((data: Service[]) => setServices(data))
+    fetch('/api/services')
+      .then(r => r.json() as Promise<Service[]>)
+      .then(data => setServices(data))
       .catch(console.error)
   }, [])
 
@@ -69,7 +69,7 @@ fetch('/api/services')
     setLoadingSlots(true)
     setState(s => ({ ...s, time: '' }))
     fetch(`/api/availability?date=${state.date}&service_id=${state.service.id}&staff_id=${state.staffId}`)
-      .then(r => r.json())
+      .then(r => r.json() as Promise<{ slots: string[] }>)
       .then(d => setSlots(d.slots || []))
       .catch(console.error)
       .finally(() => setLoadingSlots(false))
@@ -119,11 +119,10 @@ fetch('/api/services')
           booking_time: state.time,
         }),
       })
-      const data = await res.json()
+      const data = await res.json() as any
       if (!res.ok) {
         setError(data.error || 'Something went wrong')
         if (res.status === 409) {
-          // Slot taken — reload slots and go back
           setStep('datetime')
           setState(s => ({ ...s, time: '' }))
         }
@@ -224,7 +223,6 @@ fetch('/api/services')
       <h1 style={s.heading}>Pick a date & time</h1>
       <p style={s.sub}>Available slots for {state.service?.name}</p>
 
-      {/* Date selector */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
         {availableDates.map(d => {
           const iso = d.toISOString().split('T')[0]
@@ -238,7 +236,6 @@ fetch('/api/services')
         })}
       </div>
 
-      {/* Time slots */}
       {state.date && (
         <>
           <p style={{ fontSize: 12, fontWeight: 600, color: '#888', marginBottom: 12, letterSpacing: '.05em', textTransform: 'uppercase' }}>Available times</p>
