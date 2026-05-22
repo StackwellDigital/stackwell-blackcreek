@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
         if (date) { query += ' AND booking_date = ?'; args.push(date) }
         if (status) { query += ' AND status = ?'; args.push(status) }
         query += ' ORDER BY booking_date, booking_time'
-        const { results } = await db.prepare(query).all<Booking>(...args)
+        const { results } = await db.prepare(query).bind(...args).all<Booking>()
         return NextResponse.json(results)
       }
 
