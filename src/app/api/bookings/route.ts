@@ -26,8 +26,7 @@ export async function POST(req: NextRequest) {
     const db = getDB()
     const env = getEnv()
 
-    const conflict = await db
-      const conflict = staff_id
+    const conflict = staff_id
   ? await db
       .prepare(`SELECT id FROM bookings WHERE booking_date = ? AND booking_time = ? AND status != 'cancelled' AND staff_id = ?`)
       .bind(booking_date, booking_time, staff_id)
