@@ -57,9 +57,9 @@ export default function BookingPage() {
 
   // Load services on mount
   useEffect(() => {
-    fetch('/api/services')
-      .then(r => r.json())
-      .then(setServices)
+fetch('/api/services')
+  .then(r => r.json())
+  .then((data: Service[]) => setServices(data))
       .catch(console.error)
   }, [])
 
