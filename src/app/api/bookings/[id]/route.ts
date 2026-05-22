@@ -4,7 +4,6 @@ import type { Booking } from '@/lib/db'
 
 export const runtime = 'edge'
 
-// PATCH /api/bookings/[id] — update status
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
@@ -32,7 +31,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
-// GET /api/bookings/[id] — get single booking (for cancel page)
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
@@ -45,7 +43,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
-    // Only return safe fields for public access
     return NextResponse.json({
       id: booking.id,
       customer_name: booking.customer_name,

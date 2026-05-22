@@ -4,36 +4,31 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const runtime = 'edge'
 
-// day_of_week: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
 interface AvailabilityRow {
   id: number
   staff_id: number
   day_of_week: number
-  start_time: string // "HH:MM"
-  end_time: string   // "HH:MM"
+  start_time: string
+  end_time: string
 }
 
 const DEFAULT_HOURS = [
-  { day_of_week: 0, start_time: null, end_time: null },   // Sun — closed
+  { day_of_week: 0, start_time: null, end_time: null },
   { day_of_week: 1, start_time: '09:00', end_time: '17:00' },
   { day_of_week: 2, start_time: '09:00', end_time: '17:00' },
   { day_of_week: 3, start_time: '09:00', end_time: '17:00' },
   { day_of_week: 4, start_time: '09:00', end_time: '17:00' },
   { day_of_week: 5, start_time: '09:00', end_time: '17:00' },
-  { day_of_week: 6, start_time: null, end_time: null },   // Sat — closed
+  { day_of_week: 6, start_time: null, end_time: null },
 ]
 
-// GET — return all 7 days, filling in defaults for missing rows
 export async function GET(_req: NextRequest) {
-  const env = process.env as unknown as Env
-  const db = getDB(env)
+  const db = getDB()
 
-  // Use staff_id = 1 for solo mode
   const { results } = await db
     .prepare('SELECT * FROM availability WHERE staff_id = 1 ORDER BY day_of_week ASC')
     .all<AvailabilityRow>()
 
-  // Merge DB rows with defaults so we always return all 7 days
   const schedule = DEFAULT_HOURS.map(def => {
     const row = results.find(r => r.day_of_week === def.day_of_week)
     return row
@@ -44,12 +39,8 @@ export async function GET(_req: NextRequest) {
   return NextResponse.json({ schedule })
 }
 
-// POST — upsert full week schedule
-// Body: { schedule: [{ day_of_week, start_time, end_time }] }
-// Pass start_time: null / end_time: null for closed days
 export async function POST(req: NextRequest) {
-  const env = process.env as unknown as Env
-  const db = getDB(env)
+  const db = getDB()
 
   const body = await req.json() as {
     schedule: Array<{
@@ -70,7 +61,6 @@ export async function POST(req: NextRequest) {
       .first<{ id: number }>()
 
     if (day.start_time && day.end_time) {
-      // Open day — upsert
       if (existing) {
         await db
           .prepare('UPDATE availability SET start_time = ?, end_time = ? WHERE id = ?')
@@ -83,7 +73,6 @@ export async function POST(req: NextRequest) {
           .run()
       }
     } else {
-      // Closed day — delete row if exists
       if (existing) {
         await db
           .prepare('DELETE FROM availability WHERE id = ?')

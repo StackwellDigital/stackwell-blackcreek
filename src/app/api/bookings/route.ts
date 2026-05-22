@@ -5,7 +5,6 @@ import { getResend, sendConfirmationEmail, sendSMSConfirmation } from '@/lib/ema
 
 export const runtime = 'edge'
 
-// POST /api/bookings — create a new booking
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json() as any
@@ -27,7 +26,6 @@ export async function POST(req: NextRequest) {
     const db = getDB()
     const env = getEnv()
 
-    // Verify slot is still available (race condition guard)
     const conflict = await db
       .prepare(`SELECT id FROM bookings
         WHERE booking_date = ? AND booking_time = ? AND status != 'cancelled'
@@ -38,7 +36,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'That slot was just taken — please pick another time' }, { status: 409 })
     }
 
-    // Get service + staff details
     const service = await db
       .prepare('SELECT * FROM services WHERE id = ?')
       .first<{ id: number; name: string; price: number; duration: number }>(service_id)
@@ -55,7 +52,6 @@ export async function POST(req: NextRequest) {
       staffName = staff?.name || null
     }
 
-    // Insert booking
     const result = await db
       .prepare(`INSERT INTO bookings
         (customer_name, customer_phone, customer_email,
@@ -74,14 +70,12 @@ export async function POST(req: NextRequest) {
       throw new Error('Insert failed')
     }
 
-    // Send confirmation email (non-blocking)
     if (env.RESEND_API_KEY) {
       const resend = getResend(env.RESEND_API_KEY)
       const siteUrl = req.headers.get('origin') || 'https://yourdomain.com'
       sendConfirmationEmail(result, env.SHOP_NAME, resend, env.RESEND_FROM, siteUrl).catch(console.error)
     }
 
-    // Send SMS if Twilio configured
     if (env.TWILIO_SID && env.TWILIO_TOKEN && env.TWILIO_FROM) {
       sendSMSConfirmation(result, env.SHOP_NAME, env.TWILIO_SID, env.TWILIO_TOKEN, env.TWILIO_FROM).catch(console.error)
     }

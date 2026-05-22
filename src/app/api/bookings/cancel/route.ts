@@ -1,5 +1,5 @@
 // src/app/api/bookings/cancel/route.ts
-import { getDB } from '@/lib/db'
+import { getDB, getEnv } from '@/lib/db'
 import { sendCancellationEmail } from '@/lib/email'
 import { deleteCalendarEvent } from '@/lib/calendar'
 import { NextRequest, NextResponse } from 'next/server'
@@ -29,8 +29,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Missing id or email' }, { status: 400 })
   }
 
-  const env = process.env as unknown as Env
-  const db = getDB(env)
+  const db = getDB()
 
   const booking = await db
     .prepare('SELECT * FROM bookings WHERE id = ? AND customer_email = ?')
@@ -56,8 +55,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing id or email' }, { status: 400 })
   }
 
-  const env = process.env as unknown as Env
-  const db = getDB(env)
+  const db = getDB()
+  const env = getEnv()
   const cutoffHours = parseInt(env.CANCEL_CUTOFF_HOURS ?? '24', 10)
 
   const booking = await db
@@ -73,7 +72,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Already cancelled' }, { status: 409 })
   }
 
-  // 24hr cutoff check
   const apptDateTime = new Date(`${booking.booking_date}T${booking.booking_time}:00`)
   const now = new Date()
   const hoursUntil = (apptDateTime.getTime() - now.getTime()) / (1000 * 60 * 60)
@@ -89,18 +87,15 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Update DB
   await db
     .prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ?")
     .bind(id)
     .run()
 
-  // Delete GCal event
   if (booking.gcal_event_id && env.GCAL_CREDENTIALS && env.GCAL_CALENDAR_ID) {
     await deleteCalendarEvent(booking.gcal_event_id, env as any)
   }
 
-  // Send cancellation email
   try {
     await sendCancellationEmail({
       to: booking.customer_email,
@@ -114,7 +109,6 @@ export async function POST(req: NextRequest) {
     })
   } catch (err) {
     console.error('Cancellation email failed:', err)
-    // Non-fatal — booking is already cancelled in DB
   }
 
   return NextResponse.json({ success: true })
