@@ -4,7 +4,7 @@ import { getEnv } from '@/lib/db'
 export const runtime = 'edge'
 
 export async function POST(req: NextRequest) {
-  const { password } = await req.json()
+  const { password } = await req.json() as { password: string }
   const env = getEnv()
 
   if (password !== env.ADMIN_PASSWORD) {
