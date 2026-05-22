@@ -27,7 +27,8 @@ export async function GET(req: NextRequest) {
         const today = new Date().toISOString().split('T')[0]
         const { results } = await db
           .prepare(`SELECT * FROM bookings WHERE booking_date = ? ORDER BY booking_time`)
-.bind(today).all<Booking>()
+          .bind(today)
+          .all<Booking>()
 
         const stats = {
           total: results.length,
@@ -46,7 +47,8 @@ export async function GET(req: NextRequest) {
         const month = searchParams.get('month') || new Date().toISOString().slice(0, 7)
         const { results } = await db
           .prepare(`SELECT * FROM bookings WHERE booking_date LIKE ? AND status != 'cancelled'`)
-          .bind(`${month}%`).all<Booking>()
+          .bind(`${month}%`)
+          .all<Booking>()
 
         return NextResponse.json({
           total: results.length,
@@ -95,7 +97,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/admin — add walk-in, add block, etc.
 export async function POST(req: NextRequest) {
   const db = getDB()
   try {
@@ -114,13 +115,18 @@ export async function POST(req: NextRequest) {
 
     if (action === 'walkin') {
       const { customer_name, customer_phone, customer_email, service_id, staff_id, booking_date, booking_time, notes } = body
-      const service = await db.prepare('SELECT * FROM services WHERE id = ?')
-        .bind(service_id).first<{ id: number; name: string; price: number; duration: number }>()
+      const service = await db
+        .prepare('SELECT * FROM services WHERE id = ?')
+        .bind(service_id)
+        .first<{ id: number; name: string; price: number; duration: number }>()
       if (!service) return NextResponse.json({ error: 'Service not found' }, { status: 404 })
 
       let staffName = null
       if (staff_id) {
-        const staff = await db.prepare('SELECT name FROM staff WHERE id = ?').bind(staff_id).first<{ name: string }>()
+        const staff = await db
+          .prepare('SELECT name FROM staff WHERE id = ?')
+          .bind(staff_id)
+          .first<{ name: string }>()
         staffName = staff?.name || null
       }
 
@@ -128,7 +134,12 @@ export async function POST(req: NextRequest) {
         .prepare(`INSERT INTO bookings
           (customer_name, customer_phone, customer_email, service_id, service_name, service_price, service_duration, staff_id, staff_name, booking_date, booking_time, status, notes)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?) RETURNING *`)
-        .bind(customer_name, customer_phone || '', customer_email || '', service.id, service.name, service.price, service.duration, staff_id || null, staffName, booking_date, booking_time, notes || null)
+        .bind(
+          customer_name, customer_phone || '', customer_email || '',
+          service.id, service.name, service.price, service.duration,
+          staff_id || null, staffName,
+          booking_date, booking_time, notes || null
+        )
         .first()
       return NextResponse.json(result, { status: 201 })
     }
@@ -140,7 +151,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// DELETE /api/admin?action=block&id=X
 export async function DELETE(req: NextRequest) {
   const { searchParams } = req.nextUrl
   const action = searchParams.get('action')

@@ -26,15 +26,16 @@ export async function POST(req: NextRequest) {
     const db = getDB()
     const env = getEnv()
 
+    // Race condition guard
     const conflict = staff_id
-  ? await db
-      .prepare(`SELECT id FROM bookings WHERE booking_date = ? AND booking_time = ? AND status != 'cancelled' AND staff_id = ?`)
-      .bind(booking_date, booking_time, staff_id)
-      .first()
-  : await db
-      .prepare(`SELECT id FROM bookings WHERE booking_date = ? AND booking_time = ? AND status != 'cancelled'`)
-      .bind(booking_date, booking_time)
-      .first()
+      ? await db
+          .prepare(`SELECT id FROM bookings WHERE booking_date = ? AND booking_time = ? AND status != 'cancelled' AND staff_id = ?`)
+          .bind(booking_date, booking_time, staff_id)
+          .first()
+      : await db
+          .prepare(`SELECT id FROM bookings WHERE booking_date = ? AND booking_time = ? AND status != 'cancelled'`)
+          .bind(booking_date, booking_time)
+          .first()
 
     if (conflict) {
       return NextResponse.json({ error: 'That slot was just taken — please pick another time' }, { status: 409 })
@@ -42,7 +43,8 @@ export async function POST(req: NextRequest) {
 
     const service = await db
       .prepare('SELECT * FROM services WHERE id = ?')
-      .bind(service_id).first<{ id: number; name: string; price: number; duration: number }>()
+      .bind(service_id)
+      .first<{ id: number; name: string; price: number; duration: number }>()
 
     if (!service) {
       return NextResponse.json({ error: 'Service not found' }, { status: 404 })
@@ -52,7 +54,8 @@ export async function POST(req: NextRequest) {
     if (staff_id) {
       const staff = await db
         .prepare('SELECT name FROM staff WHERE id = ?')
-        .bind(staff_id).first<{ name: string }>()
+        .bind(staff_id)
+        .first<{ name: string }>()
       staffName = staff?.name || null
     }
 
@@ -63,12 +66,13 @@ export async function POST(req: NextRequest) {
          staff_id, staff_name, booking_date, booking_time, status, notes)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', ?)
         RETURNING *`)
-      .first<Booking>(
+      .bind(
         customer_name, customer_phone, customer_email,
         service.id, service.name, service.price, service.duration,
         staff_id || null, staffName,
         booking_date, booking_time, notes || null
       )
+      .first<Booking>()
 
     if (!result) {
       throw new Error('Insert failed')
