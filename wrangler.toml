@@ -1,0 +1,16 @@
+name = "stackwell-shop"
+compatibility_date = "2024-03-29"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "stackwell-shop-db"
+database_id = "2019829b-a918-4456-ae29-dc685741684f"
+
+[[r2_buckets]]
+binding = "ASSETS"
+bucket_name = "stackwell-shop-assets"
+
+[vars]
+NEXT_PUBLIC_APP_URL = "http://localhost:3000"
