@@ -62,7 +62,7 @@ const css = `
     height: 72px;
     width: auto;
     margin-bottom: 8px;
-    filter: brightness(0) invert(1);
+    /* logo already white on black */
   }
 
   .bcb-tagline {

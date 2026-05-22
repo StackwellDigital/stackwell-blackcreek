@@ -44,7 +44,7 @@ export default function AdminLogin() {
         <div style={{ width: '100%', maxWidth: 360 }}>
 
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <img src="/BCBlogo.png" alt="Black Creek Barber" style={{ height: 56, filter: 'brightness(0) invert(1)', marginBottom: 16 }} />
+            <img src="/BCBlogo.png" alt="Black Creek Barber" style={{ height: 56, marginBottom: 16 }} />
             <p style={{
               fontFamily: "'Bebas Neue', sans-serif", fontSize: 13,
               letterSpacing: '0.3em', color: '#333', textTransform: 'uppercase',

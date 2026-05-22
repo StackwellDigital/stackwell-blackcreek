@@ -116,7 +116,7 @@ function CancelPage() {
       <div style={wrap}>
         <div style={card}>
           <div style={{ textAlign: 'center', marginBottom: 36, paddingBottom: 28, borderBottom: '1px solid #1a1a1a' }}>
-            <img src="/BCBlogo.png" alt={shopName} style={{ height: 60, filter: 'brightness(0) invert(1)', marginBottom: 8 }} />
+            <img src="/BCBlogo.png" alt={shopName} style={{ height: 60, marginBottom: 8 }} />
           </div>
 
           {state.phase === 'loading' && (
