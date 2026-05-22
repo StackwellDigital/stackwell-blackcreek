@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     // Get service duration
     const service = await db
       .prepare('SELECT duration FROM services WHERE id = ?')
-      .first<{ duration: number }>(serviceId)
+      .bind(serviceId).first<{ duration: number }>()
 
     if (!service) {
       return NextResponse.json({ error: 'Service not found' }, { status: 404 })
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     const dow = new Date(date + 'T12:00:00').getDay()
     const avail = await db
       .prepare('SELECT * FROM availability WHERE (staff_id = ? OR staff_id IS NULL) AND day_of_week = ?')
-      .first<Availability>(staffId, dow)
+      .bind(staffId, dow).first<Availability>()
 
     if (!avail) {
       return NextResponse.json({ slots: [] }) // closed that day
