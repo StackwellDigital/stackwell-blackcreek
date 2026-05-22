@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
         const today = new Date().toISOString().split('T')[0]
         const { results } = await db
           .prepare(`SELECT * FROM bookings WHERE booking_date = ? ORDER BY booking_time`)
-          .all<Booking>(today)
+.bind(today).all<Booking>()
 
         const stats = {
           total: results.length,
