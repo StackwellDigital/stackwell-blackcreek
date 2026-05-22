@@ -148,3 +148,80 @@ export async function sendSMSConfirmation(
     console.error('Twilio SMS failed:', await resp.text())
   }
 }
+
+// ─── Cancellation Email ───────────────────────────────────────────────────
+
+interface CancellationEmailParams {
+  to: string
+  customerName: string
+  serviceName: string
+  bookingDate: string
+  bookingTime: string
+  shopName: string
+  resendApiKey: string
+  resendFrom: string
+}
+
+function formatDateReadable(date: string) {
+  return new Date(date + 'T12:00:00').toLocaleDateString('en-CA', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  })
+}
+
+function formatTimeReadable(time: string) {
+  const [h, m] = time.split(':').map(Number)
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  const hour = h % 12 || 12
+  return `${hour}:${m.toString().padStart(2, '0')} ${ampm}`
+}
+
+export async function sendCancellationEmail(params: CancellationEmailParams) {
+  const {
+    to, customerName, serviceName, bookingDate,
+    bookingTime, shopName, resendApiKey, resendFrom,
+  } = params
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? ''
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:520px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden">
+    <div style="background:#1a1a1a;padding:28px 32px">
+      <p style="margin:0;font-size:13px;color:#c8a96e;font-weight:500;letter-spacing:.08em;text-transform:uppercase">${shopName}</p>
+      <h1 style="margin:8px 0 0;font-size:22px;color:#fff;font-weight:500">Appointment Cancelled</h1>
+    </div>
+    <div style="padding:28px 32px">
+      <p style="margin:0 0 20px;color:#555;font-size:14px;">Hi ${customerName}, your appointment has been cancelled as requested.</p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <tr><td style="padding:8px 0;color:#888;border-bottom:1px solid #f0f0f0">Service</td><td style="padding:8px 0;font-weight:500;text-align:right;border-bottom:1px solid #f0f0f0">${serviceName}</td></tr>
+        <tr><td style="padding:8px 0;color:#888;border-bottom:1px solid #f0f0f0">Date</td><td style="padding:8px 0;font-weight:500;text-align:right;border-bottom:1px solid #f0f0f0">${formatDateReadable(bookingDate)}</td></tr>
+        <tr><td style="padding:8px 0;color:#888">Time</td><td style="padding:8px 0;font-weight:500;text-align:right">${formatTimeReadable(bookingTime)}</td></tr>
+      </table>
+      <div style="margin:24px 0">
+        <a href="${baseUrl}" style="display:inline-block;padding:11px 20px;background:#c8a96e;color:#fff;text-decoration:none;border-radius:8px;font-size:13px;font-weight:500">
+          Book again
+        </a>
+      </div>
+      <p style="margin:0;font-size:12px;color:#aaa">Questions? Reply to this email or give us a call.</p>
+    </div>
+  </div>
+</body>
+</html>`
+
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: resendFrom,
+      to,
+      subject: `Cancellation Confirmed — ${shopName}`,
+      html,
+    }),
+  })
+}
