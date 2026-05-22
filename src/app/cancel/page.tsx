@@ -1,7 +1,7 @@
 'use client'
 // src/app/cancel/page.tsx
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
 interface Booking {
@@ -40,7 +40,7 @@ function formatPrice(cents: number) {
   return `$${(cents / 100).toFixed(2)}`
 }
 
-export default function CancelPage() {
+function CancelPage() {
   const params = useSearchParams()
   const router = useRouter()
   const id = params.get('id') ?? ''
@@ -98,7 +98,6 @@ export default function CancelPage() {
   function handleReschedule() {
     if (state.phase !== 'loaded') return
     const { booking } = state
-    // Redirect to booking flow with pre-fill params
     const qs = new URLSearchParams({
       reschedule: booking.id,
       email: booking.customer_email,
@@ -181,7 +180,6 @@ export default function CancelPage() {
               {isReschedule ? 'Reschedule Appointment' : 'Manage Appointment'}
             </h2>
 
-            {/* Booking summary card */}
             <div style={{
               background: '#f3f4f6',
               borderRadius: '0.75rem',
@@ -252,5 +250,13 @@ function Row({ label, value, last }: { label: string; value: string; last?: bool
       <span style={{ color: '#6b7280', fontSize: '0.9rem' }}>{label}</span>
       <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{value}</span>
     </div>
+  )
+}
+
+export default function CancelPageWrapper() {
+  return (
+    <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', fontFamily: 'system-ui, sans-serif' }}>Loading…</div>}>
+      <CancelPage />
+    </Suspense>
   )
 }
