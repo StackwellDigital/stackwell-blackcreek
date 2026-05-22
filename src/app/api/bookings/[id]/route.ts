@@ -9,7 +9,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const { id } = await params
     const db = getDB()
-    const body = await req.json()
+    const body = await req.json() as any
     const { status } = body
 
     const valid = ['confirmed', 'completed', 'cancelled', 'no-show']

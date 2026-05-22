@@ -25,8 +25,8 @@ const DEFAULT_HOURS = [
 
 // GET — return all 7 days, filling in defaults for missing rows
 export async function GET(_req: NextRequest) {
-  
-  const db = getDB()
+  const env = process.env as unknown as Env
+  const db = getDB(env)
 
   // Use staff_id = 1 for solo mode
   const { results } = await db
@@ -48,8 +48,8 @@ export async function GET(_req: NextRequest) {
 // Body: { schedule: [{ day_of_week, start_time, end_time }] }
 // Pass start_time: null / end_time: null for closed days
 export async function POST(req: NextRequest) {
-  
-  const db = getDB()
+  const env = process.env as unknown as Env
+  const db = getDB(env)
 
   const body = await req.json() as {
     schedule: Array<{

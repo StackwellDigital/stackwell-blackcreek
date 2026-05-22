@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const db = getDB()
   try {
-    const body = await req.json()
+    const body = await req.json() as Record<string, unknown>
     const { action } = body
 
     if (action === 'block') {

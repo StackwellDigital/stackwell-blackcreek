@@ -8,7 +8,7 @@ export const runtime = 'edge'
 // POST /api/bookings — create a new booking
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    const body = await req.json() as any
     const {
       customer_name,
       customer_phone,

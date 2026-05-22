@@ -7,14 +7,14 @@ export const runtime = 'edge'
 interface Service {
   id: number
   name: string
-  duration_minutes: number
-  price: number // cents
-  is_active: number // 0 | 1
+  duration: number   // actual column name in schema
+  price: number      // cents
+  active: number     // actual column name in schema — 0 | 1
   sort_order: number
 }
 
 // GET — list all services
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const env = process.env as unknown as Env
   const db = getDB(env)
 
@@ -31,27 +31,27 @@ export async function POST(req: NextRequest) {
   const db = getDB(env)
   const body = await req.json() as {
     name: string
-    duration_minutes: number
-    price_dollars: number // we accept dollars, store cents
+    duration: number
+    price_dollars: number
   }
 
-  if (!body.name || !body.duration_minutes || body.price_dollars === undefined) {
+  if (!body.name || !body.duration || body.price_dollars === undefined) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
   const priceCents = Math.round(body.price_dollars * 100)
 
-  // Get max sort_order
-  const { sort_order } = await db
+  const row = await db
     .prepare('SELECT COALESCE(MAX(sort_order), 0) as sort_order FROM services')
-    .first<{ sort_order: number }>() ?? { sort_order: 0 }
+    .first<{ sort_order: number }>()
+  const nextSort = (row?.sort_order ?? 0) + 1
 
   await db
     .prepare(`
-      INSERT INTO services (name, duration_minutes, price, is_active, sort_order)
+      INSERT INTO services (name, duration, price, active, sort_order)
       VALUES (?, ?, ?, 1, ?)
     `)
-    .bind(body.name, body.duration_minutes, priceCents, sort_order + 1)
+    .bind(body.name, body.duration, priceCents, nextSort)
     .run()
 
   return NextResponse.json({ success: true })
@@ -64,9 +64,9 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json() as {
     id: number
     name?: string
-    duration_minutes?: number
+    duration?: number
     price_dollars?: number
-    is_active?: boolean
+    active?: boolean
   }
 
   if (!body.id) {
@@ -83,21 +83,21 @@ export async function PATCH(req: NextRequest) {
   }
 
   const name = body.name ?? existing.name
-  const duration = body.duration_minutes ?? existing.duration_minutes
+  const duration = body.duration ?? existing.duration
   const price = body.price_dollars !== undefined
     ? Math.round(body.price_dollars * 100)
     : existing.price
-  const isActive = body.is_active !== undefined
-    ? (body.is_active ? 1 : 0)
-    : existing.is_active
+  const active = body.active !== undefined
+    ? (body.active ? 1 : 0)
+    : existing.active
 
   await db
     .prepare(`
       UPDATE services
-      SET name = ?, duration_minutes = ?, price = ?, is_active = ?
+      SET name = ?, duration = ?, price = ?, active = ?
       WHERE id = ?
     `)
-    .bind(name, duration, price, isActive, body.id)
+    .bind(name, duration, price, active, body.id)
     .run()
 
   return NextResponse.json({ success: true })
