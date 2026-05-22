@@ -6,18 +6,18 @@ import { useEffect, useState } from 'react'
 interface Service {
   id: number
   name: string
-  duration_minutes: number
-  price: number // cents
-  is_active: number
+  duration: number   // actual column name
+  price: number      // cents
+  active: number     // actual column name
 }
 
 interface FormState {
   name: string
-  duration_minutes: string
+  duration: string
   price_dollars: string
 }
 
-const EMPTY_FORM: FormState = { name: '', duration_minutes: '30', price_dollars: '' }
+const EMPTY_FORM: FormState = { name: '', duration: '30', price_dollars: '' }
 
 const btn = (bg: string, color = '#fff'): React.CSSProperties => ({
   padding: '0.45rem 0.9rem',
@@ -61,7 +61,7 @@ export default function AdminServicesTab() {
     setEditingId(s.id)
     setForm({
       name: s.name,
-      duration_minutes: String(s.duration_minutes),
+      duration: String(s.duration),
       price_dollars: (s.price / 100).toFixed(2),
     })
     setShowAdd(false)
@@ -77,7 +77,7 @@ export default function AdminServicesTab() {
 
   async function handleSave(id?: number) {
     setError('')
-    if (!form.name.trim() || !form.duration_minutes || !form.price_dollars) {
+    if (!form.name.trim() || !form.duration || !form.price_dollars) {
       setError('All fields are required.')
       return
     }
@@ -86,7 +86,7 @@ export default function AdminServicesTab() {
     const payload = {
       ...(id ? { id } : {}),
       name: form.name.trim(),
-      duration_minutes: parseInt(form.duration_minutes),
+      duration: parseInt(form.duration),
       price_dollars: parseFloat(form.price_dollars),
     }
 
@@ -110,7 +110,7 @@ export default function AdminServicesTab() {
     await fetch('/api/admin/services', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: s.id, is_active: !s.is_active }),
+      body: JSON.stringify({ id: s.id, active: !s.active }),
     })
     await load()
   }
@@ -139,7 +139,6 @@ export default function AdminServicesTab() {
         )}
       </div>
 
-      {/* Add form */}
       {showAdd && (
         <ServiceForm
           form={form}
@@ -152,18 +151,17 @@ export default function AdminServicesTab() {
         />
       )}
 
-      {/* Service list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         {services.length === 0 && !showAdd && (
           <p style={{ color: '#6b7280' }}>No services yet. Add one above.</p>
         )}
         {services.map(s => (
           <div key={s.id} style={{
-            background: s.is_active ? '#fff' : '#f9fafb',
+            background: s.active ? '#fff' : '#f9fafb',
             border: '1.5px solid #e5e7eb',
             borderRadius: '0.6rem',
             padding: '1rem 1.25rem',
-            opacity: s.is_active ? 1 : 0.65,
+            opacity: s.active ? 1 : 0.65,
           }}>
             {editingId === s.id ? (
               <ServiceForm
@@ -180,15 +178,15 @@ export default function AdminServicesTab() {
                 <div>
                   <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>
                     {s.name}
-                    {!s.is_active && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#9ca3af', fontWeight: 400 }}>inactive</span>}
+                    {!s.active && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#9ca3af', fontWeight: 400 }}>inactive</span>}
                   </div>
                   <div style={{ color: '#6b7280', fontSize: '0.85rem', marginTop: '2px' }}>
-                    {s.duration_minutes} min · ${(s.price / 100).toFixed(2)}
+                    {s.duration} min · ${(s.price / 100).toFixed(2)}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button style={btn(s.is_active ? '#f3f4f6', '#374151')} onClick={() => handleToggle(s)}>
-                    {s.is_active ? 'Deactivate' : 'Activate'}
+                  <button style={btn(s.active ? '#f3f4f6' : '#f3f4f6', '#374151')} onClick={() => handleToggle(s)}>
+                    {s.active ? 'Deactivate' : 'Activate'}
                   </button>
                   <button style={btn('#f3f4f6', '#374151')} onClick={() => startEdit(s)}>Edit</button>
                   <button style={btn('#fee2e2', '#dc2626')} onClick={() => handleDelete(s)}>Delete</button>
@@ -232,8 +230,8 @@ function ServiceForm({
           <label style={{ fontSize: '0.8rem', color: '#6b7280', display: 'block', marginBottom: '4px' }}>Duration</label>
           <select
             style={{ ...input }}
-            value={form.duration_minutes}
-            onChange={e => setForm({ ...form, duration_minutes: e.target.value })}
+            value={form.duration}
+            onChange={e => setForm({ ...form, duration: e.target.value })}
           >
             {DURATIONS.map(d => (
               <option key={d} value={d}>{d} min</option>

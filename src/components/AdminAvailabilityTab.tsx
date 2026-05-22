@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react'
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 const TIMES = Array.from({ length: 28 }, (_, i) => {
-  // 7:00 AM to 9:00 PM in 30min increments
   const totalMins = 7 * 60 + i * 30
   const h = Math.floor(totalMins / 60)
   const m = totalMins % 60
@@ -40,8 +39,8 @@ export default function AdminAvailabilityTab() {
 
   useEffect(() => {
     fetch('/api/admin/availability')
-      .then(r => r.json())
-      .then((data: { schedule: DaySchedule[] }) => {
+      .then(r => r.json() as Promise<{ schedule: DaySchedule[] }>)
+      .then(data => {
         setSchedule(data.schedule)
         setLoading(false)
       })
@@ -65,7 +64,6 @@ export default function AdminAvailabilityTab() {
     setSaving(true)
     setError('')
 
-    // Validate — open days must have start < end
     for (const d of schedule) {
       if (d.start_time && d.end_time) {
         if (d.start_time >= d.end_time) {
@@ -141,10 +139,8 @@ export default function AdminAvailabilityTab() {
                 opacity: isOpen ? 1 : 0.6,
               }}
             >
-              {/* Day name */}
               <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{DAYS[day.day_of_week]}</span>
 
-              {/* Toggle */}
               <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none' }}>
                 <div
                   onClick={() => toggleDay(day.day_of_week, !isOpen)}
@@ -172,7 +168,6 @@ export default function AdminAvailabilityTab() {
                 </div>
               </label>
 
-              {/* Time pickers or closed label */}
               {isOpen ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <select
