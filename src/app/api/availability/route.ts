@@ -58,9 +58,9 @@ export async function GET(req: NextRequest) {
     // Get existing bookings for this date
     const { results: existing } = await db
       .prepare(`SELECT booking_time, service_duration FROM bookings
-        WHERE booking_date = ? AND (staff_id = ? OR staff_id IS NULL)
-        AND status NOT IN ('cancelled')`)
-      .all<Pick<Booking, 'booking_time' | 'serv.bind(date, staffId).all<Pick<Booking, 'booking_time' | 'service_duration'>>()ice_duration'>>(date, staffId)
+  WHERE booking_date = ? AND (staff_id = ? OR staff_id IS NULL)
+  AND status NOT IN ('cancelled')`)
+.bind(date, staffId).all<Pick<Booking, 'booking_time' | 'service_duration'>>()
 
     // Filter out blocked and booked slots
     const available = allSlots.filter((slot) => {
