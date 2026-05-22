@@ -1,7 +1,14 @@
 'use client'
+// src/app/admin/login/page.tsx
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+
+const css = `
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0a0a0a; }
+`
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('')
@@ -13,45 +20,82 @@ export default function AdminLogin() {
     e.preventDefault()
     setLoading(true)
     setError('')
-
     const res = await fetch('/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password }),
     })
-
     if (res.ok) {
       router.push('/admin')
     } else {
-      setError('Wrong password')
+      setError('Wrong password.')
       setLoading(false)
     }
   }
 
   return (
-    <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f0' }}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: '40px 48px', width: '100%', maxWidth: 380, boxShadow: '0 2px 24px rgba(0,0,0,0.07)' }}>
-        <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: '#c8a96e' }}>Admin</p>
-        <h1 style={{ margin: '0 0 28px', fontSize: 22, fontWeight: 500 }}>Sign in</h1>
-        <form onSubmit={handleLogin}>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#888', marginBottom: 6 }}>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 15, marginBottom: 16, boxSizing: 'border-box' }}
-            autoFocus
-          />
-          {error && <p style={{ color: '#e24b4a', fontSize: 13, margin: '0 0 12px' }}>{error}</p>}
-          <button
-            type="submit"
-            disabled={loading || !password}
-            style={{ width: '100%', padding: '11px', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer', opacity: loading || !password ? 0.5 : 1 }}
-          >
-            {loading ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <div style={{
+        minHeight: '100vh', background: '#0a0a0a',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: "'Barlow', sans-serif", padding: '24px',
+      }}>
+        <div style={{ width: '100%', maxWidth: 360 }}>
+
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <img src="/BCBlogo.png" alt="Black Creek Barber" style={{ height: 56, filter: 'brightness(0) invert(1)', marginBottom: 16 }} />
+            <p style={{
+              fontFamily: "'Bebas Neue', sans-serif", fontSize: 13,
+              letterSpacing: '0.3em', color: '#333', textTransform: 'uppercase',
+            }}>Admin Access</p>
+          </div>
+
+          <form onSubmit={handleLogin}>
+            <label style={{
+              display: 'block', fontSize: 10, letterSpacing: '0.2em',
+              textTransform: 'uppercase', color: '#333', marginBottom: 8,
+            }}>
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              autoFocus
+              style={{
+                width: '100%', padding: '13px 14px',
+                background: '#0f0f0f', border: '1px solid #1e1e1e',
+                color: '#f0f0f0', fontFamily: "'Barlow', sans-serif",
+                fontSize: 15, outline: 'none', marginBottom: 12,
+              }}
+              placeholder="••••••••"
+            />
+
+            {error && (
+              <p style={{
+                color: '#ef4444', fontSize: 12, letterSpacing: '0.1em',
+                textTransform: 'uppercase', marginBottom: 12,
+              }}>{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || !password}
+              style={{
+                width: '100%', padding: '14px',
+                background: loading || !password ? '#111' : '#f0f0f0',
+                color: loading || !password ? '#333' : '#0a0a0a',
+                border: 'none', fontFamily: "'Bebas Neue', sans-serif",
+                fontSize: 20, letterSpacing: '0.15em', cursor: loading || !password ? 'default' : 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {loading ? 'Entering…' : 'Enter'}
+            </button>
+          </form>
+        </div>
       </div>
-    </main>
+    </>
   )
 }
