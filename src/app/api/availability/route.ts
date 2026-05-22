@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       .prepare(`SELECT * FROM blocked_times WHERE
         (staff_id = ? OR staff_id IS NULL) AND
         (date = ? OR (recurring = 1 AND day_of_week = ?))`)
-      .all<BlockedTime>(staffId, date, dow)
+      .bind(staffId, date, dow).all<BlockedTime>()
 
     // Get existing bookings for this date
     const { results: existing } = await db

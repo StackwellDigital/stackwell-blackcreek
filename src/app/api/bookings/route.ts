@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     const service = await db
       .prepare('SELECT * FROM services WHERE id = ?')
-      .first<{ id: number; name: string; price: number; duration: number }>(service_id)
+      .bind(service_id).first<{ id: number; name: string; price: number; duration: number }>()
 
     if (!service) {
       return NextResponse.json({ error: 'Service not found' }, { status: 404 })
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     if (staff_id) {
       const staff = await db
         .prepare('SELECT name FROM staff WHERE id = ?')
-        .first<{ name: string }>(staff_id)
+        .bind(staff_id).first<{ name: string }>()
       staffName = staff?.name || null
     }
 

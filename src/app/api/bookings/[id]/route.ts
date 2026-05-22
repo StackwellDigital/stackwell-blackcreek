@@ -18,7 +18,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const result = await db
       .prepare('UPDATE bookings SET status = ? WHERE id = ? RETURNING *')
-      .first<Booking>(status, id)
+      .bind(status, id).first<Booking>()
 
     if (!result) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
@@ -37,7 +37,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const db = getDB()
     const booking = await db
       .prepare('SELECT * FROM bookings WHERE id = ?')
-      .first<Booking>(id)
+      .bind(id).first<Booking>()
 
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
@@ -56,3 +56,4 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Failed to get booking' }, { status: 500 })
   }
 }
+
