@@ -30,7 +30,7 @@ const STEPS: Step[] = MULTI_STAFF
   : ['service', 'datetime', 'info', 'review', 'done']
 
 function stepIndex(step: Step) { return STEPS.indexOf(step) }
-function stepNum(step: Step) { return STEPS.filter(s => s !== 'done').indexOf(step) + 1 }
+function stepNum(step: Step) { return STEPS.filter(s => s !== 'done').indexOf(step as any) + 1 }
 function totalSteps() { return STEPS.filter(s => s !== 'done').length }
 
 export default function BookingPage() {
