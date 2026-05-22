@@ -64,7 +64,7 @@ export default function AdminPage() {
   const loadToday = useCallback(async () => {
     setLoading(true)
     const res = await fetch('/api/admin?action=today')
-    const data = await res.json()
+    const data = await res.json() as { bookings: Booking[]; stats: Stats }
     setBookings(data.bookings || [])
     setStats(data.stats || null)
     setLoading(false)
@@ -83,7 +83,7 @@ export default function AdminPage() {
 
   async function loadCustomers() {
     const res = await fetch('/api/admin?action=customers')
-    setCustomers(await res.json())
+    setCustomers(await res.json() as Customer[])
   }
 
   async function handleLogout() {
@@ -217,7 +217,7 @@ function CalendarView() {
     })
     const start = dates[0], end = dates[dates.length - 1]
     fetch(`/api/admin?action=bookings`)
-      .then(r => r.json())
+      .then(r => r.json() as Promise<Booking[]>)
       .then((all: Booking[]) => setBookings(all.filter(b => b.booking_date >= start && b.booking_date <= end)))
   }, [])
 
@@ -316,7 +316,7 @@ function WalkInForm({ onAdded }: { onAdded: () => void }) {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    fetch('/api/services').then(r => r.json()).then(setServices)
+    fetch('/api/services').then(r => r.json() as Promise<Array<{ id: number; name: string; price: number }>>) .then(setServices)
   }, [])
 
   async function save() {
