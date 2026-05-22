@@ -12,6 +12,10 @@ export interface Env {
   TWILIO_SID?: string
   TWILIO_TOKEN?: string
   TWILIO_FROM?: string
+  CANCEL_CUTOFF_HOURS?: string
+  SHOP_PHONE?: string
+  GCAL_CREDENTIALS?: string
+  GCAL_CALENDAR_ID?: string
 }
 
 export function getDB(): D1Database {
