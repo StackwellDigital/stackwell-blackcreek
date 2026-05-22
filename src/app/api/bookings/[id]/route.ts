@@ -5,8 +5,9 @@ import type { Booking } from '@/lib/db'
 export const runtime = 'edge'
 
 // PATCH /api/bookings/[id] — update status
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const db = getDB()
     const body = await req.json()
     const { status } = body
@@ -18,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     const result = await db
       .prepare('UPDATE bookings SET status = ? WHERE id = ? RETURNING *')
-      .first<Booking>(status, params.id)
+      .first<Booking>(status, id)
 
     if (!result) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
@@ -32,12 +33,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 // GET /api/bookings/[id] — get single booking (for cancel page)
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const db = getDB()
     const booking = await db
       .prepare('SELECT * FROM bookings WHERE id = ?')
-      .first<Booking>(params.id)
+      .first<Booking>(id)
 
     if (!booking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
