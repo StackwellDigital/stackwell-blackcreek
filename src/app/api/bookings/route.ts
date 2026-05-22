@@ -27,10 +27,15 @@ export async function POST(req: NextRequest) {
     const env = getEnv()
 
     const conflict = await db
-      .prepare(`SELECT id FROM bookings
-        WHERE booking_date = ? AND booking_time = ? AND status != 'cancelled'
-        ${staff_id ? 'AND staff_id = ?' : ''}`)
-      .first(booking_date, booking_time, ...(staff_id ? [staff_id] : []))
+      const conflict = staff_id
+  ? await db
+      .prepare(`SELECT id FROM bookings WHERE booking_date = ? AND booking_time = ? AND status != 'cancelled' AND staff_id = ?`)
+      .bind(booking_date, booking_time, staff_id)
+      .first()
+  : await db
+      .prepare(`SELECT id FROM bookings WHERE booking_date = ? AND booking_time = ? AND status != 'cancelled'`)
+      .bind(booking_date, booking_time)
+      .first()
 
     if (conflict) {
       return NextResponse.json({ error: 'That slot was just taken — please pick another time' }, { status: 409 })
