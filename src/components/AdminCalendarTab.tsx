@@ -58,9 +58,9 @@ export default function AdminCalendarTab() {
   const [popup, setPopup] = useState<{ booking: Booking; x: number; y: number } | null>(null)
 
   useEffect(() => {
-    fetch('/api/admin')
-      .then(r => r.json() as Promise<{ bookings: Booking[] }>)
-      .then(d => { setBookings(d.bookings || []); setLoading(false) })
+    fetch('/api/admin?action=bookings')
+      .then(r => r.json() as Promise<Booking[]>)
+      .then(d => { setBookings(Array.isArray(d) ? d : []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
 
