@@ -5,29 +5,26 @@ export const runtime = 'experimental-edge'
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Protect /admin and /api/admin routes
   if (!pathname.startsWith('/admin') && !pathname.startsWith('/api/admin')) {
     return NextResponse.next()
   }
 
-  const auth = req.cookies.get('admin_session')?.value
-  const adminPassword = (process.env.ADMIN_PASSWORD as string) || ''
-
-  if (auth === `sw_${adminPassword}`) {
+  // Allow login page/API through
+  if (pathname === '/admin/login' || pathname === '/api/admin/login') {
     return NextResponse.next()
   }
 
-  // Redirect to login for page routes
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
-    return NextResponse.redirect(new URL('/admin/login', req.url))
+  const auth = req.cookies.get('admin_session')?.value
+
+  if (auth === 'sw_authed') {
+    return NextResponse.next()
   }
 
-  // 401 for API routes
   if (pathname.startsWith('/api/admin')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  return NextResponse.next()
+  return NextResponse.redirect(new URL('/admin/login', req.url))
 }
 
 export const config = {
