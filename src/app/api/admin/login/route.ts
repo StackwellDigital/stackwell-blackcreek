@@ -8,7 +8,7 @@ interface Env {
 
 export async function POST(req: NextRequest) {
   const { password } = await req.json() as { password: string }
-  const env = process.env as Env
+  const env = process.env as unknown as Env
 
   if (password !== env.ADMIN_PASSWORD) {
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
