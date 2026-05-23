@@ -13,7 +13,6 @@ database_id = "1d295b84-1ae3-48bf-8e36-8751c0422010"
 
 [vars]
 SHOP_NAME = "Black Creek Barber"
-ADMIN_PASSWORD = "admin"
 RESEND_FROM = "bookings@stackwell.digital"
 SLOT_INTERVAL = "30"
 BOOKING_WINDOW_DAYS = "14"
