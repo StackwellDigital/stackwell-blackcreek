@@ -2,10 +2,13 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import type { Booking } from '@/lib/db'
+import AdminCalendarTab from '@/components/AdminCalendarTab'
+import AdminServicesTab from '@/components/AdminServicesTab'
+import AdminAvailabilityTab from '@/components/AdminAvailabilityTab'
 
 const SHOP_NAME = process.env.NEXT_PUBLIC_SHOP_NAME || 'The Barbershop'
 
-type AdminTab = 'today' | 'calendar' | 'customers' | 'block' | 'walkin'
+type AdminTab = 'today' | 'calendar' | 'customers' | 'block' | 'walkin' | 'services' | 'hours'
 
 interface Stats {
   total: number
@@ -92,7 +95,7 @@ export default function AdminPage() {
   }
 
   const s = {
-    wrap: { maxWidth: 760, margin: '0 auto', padding: '28px 16px', fontFamily: 'system-ui, sans-serif' } as React.CSSProperties,
+    wrap: { maxWidth: 900, margin: '0 auto', padding: '28px 16px', fontFamily: 'system-ui, sans-serif' } as React.CSSProperties,
     tabBar: { display: 'flex', gap: 6, marginBottom: 24, flexWrap: 'wrap' as const },
     tab: (active: boolean): React.CSSProperties => ({
       padding: '7px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer',
@@ -111,8 +114,6 @@ export default function AdminPage() {
       flexShrink: 0,
     }),
     actBtn: { padding: '5px 10px', fontSize: 12, border: '1px solid #e8e8e8', borderRadius: 6, background: 'none', cursor: 'pointer', color: '#666' } as React.CSSProperties,
-    input: { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #e0e0e0', fontSize: 14, boxSizing: 'border-box' as const, marginBottom: 12 },
-    btn: { padding: '10px 20px', background: '#c8a96e', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' } as React.CSSProperties,
     sectionHead: { fontSize: 13, fontWeight: 600, color: '#333', marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #f0f0f0' } as React.CSSProperties,
   }
 
@@ -127,12 +128,12 @@ export default function AdminPage() {
       </div>
 
       <div style={s.tabBar}>
-        {(['today', 'calendar', 'customers', 'block', 'walkin'] as AdminTab[]).map(t => (
+        {(['today', 'calendar', 'customers', 'block', 'walkin', 'services', 'hours'] as AdminTab[]).map(t => (
           <button key={t} style={s.tab(tab === t)} onClick={() => {
             setTab(t)
             if (t === 'customers') loadCustomers()
           }}>
-            {{ today: 'Today', calendar: 'Calendar', customers: 'Customers', block: 'Block time', walkin: 'Add walk-in' }[t]}
+            {{ today: 'Today', calendar: 'Calendar', customers: 'Customers', block: 'Block time', walkin: 'Add walk-in', services: 'Services', hours: 'Hours' }[t]}
           </button>
         ))}
       </div>
@@ -172,8 +173,8 @@ export default function AdminPage() {
         </>
       )}
 
-      {/* CALENDAR */}
-      {tab === 'calendar' && <CalendarView />}
+      {/* CALENDAR — new component */}
+      {tab === 'calendar' && <AdminCalendarTab />}
 
       {/* CUSTOMERS */}
       {tab === 'customers' && (
@@ -200,63 +201,12 @@ export default function AdminPage() {
 
       {/* WALK-IN */}
       {tab === 'walkin' && <WalkInForm onAdded={loadToday} />}
-    </div>
-  )
-}
 
-function CalendarView() {
-  const [bookings, setBookings] = useState<Booking[]>([])
+      {/* SERVICES */}
+      {tab === 'services' && <AdminServicesTab />}
 
-  useEffect(() => {
-    const monday = new Date()
-    monday.setDate(monday.getDate() - monday.getDay() + 1)
-    const dates = Array.from({ length: 6 }, (_, i) => {
-      const d = new Date(monday)
-      d.setDate(monday.getDate() + i)
-      return d.toISOString().split('T')[0]
-    })
-    const start = dates[0], end = dates[dates.length - 1]
-    fetch(`/api/admin?action=bookings`)
-      .then(r => r.json() as Promise<Booking[]>)
-      .then((all: Booking[]) => setBookings(all.filter(b => b.booking_date >= start && b.booking_date <= end)))
-  }, [])
-
-  const monday = new Date()
-  monday.setDate(monday.getDate() - monday.getDay() + 1)
-  const weekDates = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date(monday)
-    d.setDate(monday.getDate() + i)
-    return d
-  })
-
-  function formatTime(t: string): string {
-    const [h, m] = t.split(':').map(Number)
-    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`
-  }
-
-  return (
-    <div>
-      <div style={{ fontSize: 13, fontWeight: 600, color: '#333', marginBottom: 12 }}>This week</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
-        {weekDates.map(d => {
-          const iso = d.toISOString().split('T')[0]
-          const dayBks = bookings.filter(b => b.booking_date === iso)
-          return (
-            <div key={iso} style={{ background: '#f9f9f7', borderRadius: 10, padding: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#aaa', marginBottom: 8, textTransform: 'uppercase' }}>
-                {d.toLocaleDateString('en-CA', { weekday: 'short' })}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>{d.getDate()}</div>
-              {dayBks.map(b => (
-                <div key={b.id} style={{ background: '#fdf8ee', borderRadius: 6, padding: '5px 7px', marginBottom: 5 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#8a6a30' }}>{formatTime(b.booking_time)}</div>
-                  <div style={{ fontSize: 11, color: '#a07840', marginTop: 1 }}>{b.customer_name.split(' ')[0]}</div>
-                </div>
-              ))}
-            </div>
-          )
-        })}
-      </div>
+      {/* HOURS */}
+      {tab === 'hours' && <AdminAvailabilityTab />}
     </div>
   )
 }
