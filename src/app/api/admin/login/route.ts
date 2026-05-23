@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getEnv } from '@/lib/db'
 
 export const runtime = 'edge'
 
+interface Env {
+  ADMIN_PASSWORD: string
+}
+
 export async function POST(req: NextRequest) {
   const { password } = await req.json() as { password: string }
-  const env = getEnv()
+  const env = process.env as Env
 
   if (password !== env.ADMIN_PASSWORD) {
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
