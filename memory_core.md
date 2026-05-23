@@ -1,4 +1,4 @@
-# memory_core.md
+# memory_core.md 
 > Stable facts. Only update when something fundamentally changes.
 
 ---
